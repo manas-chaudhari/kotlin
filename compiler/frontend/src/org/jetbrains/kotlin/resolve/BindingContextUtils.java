@@ -25,6 +25,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.kotlin.descriptors.*;
 import org.jetbrains.kotlin.diagnostics.Diagnostic;
+import org.jetbrains.kotlin.diagnostics.Severity;
 import org.jetbrains.kotlin.psi.*;
 import org.jetbrains.kotlin.resolve.calls.callUtil.CallUtilKt;
 import org.jetbrains.kotlin.resolve.calls.model.ResolvedCall;
@@ -35,11 +36,11 @@ import org.jetbrains.kotlin.types.KotlinType;
 import org.jetbrains.kotlin.types.TypeUtils;
 import org.jetbrains.kotlin.types.expressions.KotlinTypeInfo;
 import org.jetbrains.kotlin.types.expressions.typeInfoFactory.TypeInfoFactoryKt;
-import org.jetbrains.kotlin.util.slicedMap.MutableSlicedMap;
-import org.jetbrains.kotlin.util.slicedMap.ReadOnlySlice;
-import org.jetbrains.kotlin.util.slicedMap.WritableSlice;
+import org.jetbrains.kotlin.util.slicedMap.*;
 
 import java.util.Collection;
+import java.util.EnumMap;
+import java.util.Map;
 
 import static org.jetbrains.kotlin.diagnostics.Errors.AMBIGUOUS_LABEL;
 import static org.jetbrains.kotlin.resolve.BindingContext.*;
@@ -215,6 +216,29 @@ public class BindingContextUtils {
         return bindingContext.get(CONSTRUCTOR_RESOLVED_DELEGATION_CALL, constructorDescriptor);
     }
 
+    public static final WritableSlice<PsiElement, Object> DIAGNOSTIC_INFO =
+            new BasicWritableSlice<PsiElement, Object>(RewritePolicy.DO_NOTHING);
+
+    public static final WritableSlice<PsiElement, Object> DIAGNOSTIC_WARNING =
+            new BasicWritableSlice<PsiElement, Object>(RewritePolicy.DO_NOTHING);
+
+    public static final WritableSlice<PsiElement, Object> DIAGNOSTIC_ERROR =
+            new BasicWritableSlice<PsiElement, Object>(RewritePolicy.DO_NOTHING);
+
+    private static final Map<Severity, WritableSlice<PsiElement, Object>> diagnosticToSliceMap =
+            new EnumMap<Severity, WritableSlice<PsiElement, Object>>(Severity.class);
+
+    static {
+        diagnosticToSliceMap.put(Severity.INFO, DIAGNOSTIC_INFO);
+        diagnosticToSliceMap.put(Severity.WARNING, DIAGNOSTIC_WARNING);
+        diagnosticToSliceMap.put(Severity.ERROR, DIAGNOSTIC_ERROR);
+    }
+
+    @Nullable
+    private static WritableSlice<PsiElement, Object> sliceByDiagnostic(Diagnostic diagnostic) {
+        return diagnosticToSliceMap.get(diagnostic.getSeverity());
+    }
+
     static void addOwnDataTo(
             @NotNull final BindingTrace trace, @Nullable final TraceEntryFilter filter, boolean commitDiagnostics,
             @NotNull MutableSlicedMap map, MutableDiagnosticsWithSuppression diagnostics
@@ -233,7 +257,7 @@ public class BindingContextUtils {
         if (!commitDiagnostics) return;
 
         for (Diagnostic diagnostic : diagnostics.getOwnDiagnostics()) {
-            if (filter == null || filter.accept(null, diagnostic.getPsiElement())) {
+            if (filter == null || filter.accept(sliceByDiagnostic(diagnostic), diagnostic.getPsiElement())) {
                 trace.report(diagnostic);
             }
         }
