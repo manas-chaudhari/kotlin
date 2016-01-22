@@ -40,7 +40,9 @@ import com.intellij.openapi.projectRoots.Sdk
 import com.intellij.openapi.projectRoots.impl.JavaAwareProjectJdkTableImpl
 import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.vfs.LocalFileSystem
+import com.intellij.openapi.vfs.VfsUtilCore
 import com.intellij.openapi.vfs.VirtualFile
+import com.intellij.openapi.vfs.VirtualFileVisitor
 import com.intellij.psi.JavaPsiFacade
 import com.intellij.psi.PsiManager
 import com.intellij.testFramework.ProjectViewTestUtil
@@ -48,6 +50,7 @@ import com.intellij.testFramework.TestDataProvider
 import com.intellij.ui.classFilter.ClassFilter
 import com.intellij.util.containers.hash.HashMap
 import org.jetbrains.kotlin.idea.test.PluginTestCaseBase
+import org.jetbrains.kotlin.idea.util.application.runWriteAction
 import org.jetbrains.kotlin.test.MockLibraryUtil
 import java.io.File
 
@@ -82,7 +85,13 @@ class KotlinCoverageIntegrationTest : CodeInsightTestCase() {
 
         val outDir = File(testDataPath, "out/production/kotlinCoverage")
         MockLibraryUtil.compileKotlin(File(testDataPath, "src").path, outDir)
-        LocalFileSystem.getInstance().refreshIoFiles(listOf(outDir))
+        val outDirVFile = LocalFileSystem.getInstance().refreshAndFindFileByIoFile(outDir)!!
+        runWriteAction {
+            // ensure all children are loaded and refresh does pick up new files
+            VfsUtilCore.visitChildrenRecursively(outDirVFile, object : VirtualFileVisitor<VirtualFile>() {
+            })
+            outDirVFile.refresh(false, true)
+        }
 
         ProjectViewTestUtil.setupImpl(project, true)
         val projectView = ProjectView.getInstance(project)
@@ -111,8 +120,34 @@ class KotlinCoverageIntegrationTest : CodeInsightTestCase() {
         assertEquals("75% methods, 83% lines covered", presentationData.locationString)
     }
 
+    fun testInline() {
+        val vFile = openFileInEditor("src/inline.kt")
+        val bundle = runAndLoadCoverage()
+
+        val consumer = annotatePackage(bundle)
+        val inlineKtClassCoverage = consumer.classCoverageInfoMap["demo.InlineKt"]!!
+        assertEquals(6, inlineKtClassCoverage.fullyCoveredLineCount)
+        assertEquals(6, inlineKtClassCoverage.totalLineCount)
+
+        val presentationData = getProjectViewPresentation(vFile)
+        assertEquals("100% methods, 100% lines covered", presentationData.locationString)
+    }
+
+    fun testLambda() {
+        val vFile = openFileInEditor("src/lambda.kt")
+        val bundle = runAndLoadCoverage()
+
+        val consumer = annotatePackage(bundle)
+        val lambdaKtClassCoverage = consumer.classCoverageInfoMap["demo.LambdaKt"]!!
+        assertEquals(6, lambdaKtClassCoverage.fullyCoveredLineCount)
+        assertEquals(6, lambdaKtClassCoverage.totalLineCount)
+
+        val presentationData = getProjectViewPresentation(vFile)
+        assertEquals("100% methods, 100% lines covered", presentationData.locationString)
+    }
+
     private fun openFileInEditor(path: String): VirtualFile {
-        val vFile = LocalFileSystem.getInstance().findFileByIoFile(File(testDataPath, path))!!
+        val vFile = LocalFileSystem.getInstance().refreshAndFindFileByIoFile(File(testDataPath, path))!!
         configureByExistingFile(vFile)
         val caretMarkerOffset = editor.document.text.indexOf("<<<caret")
         val caretLine = editor.document.getLineNumber(caretMarkerOffset)
