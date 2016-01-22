@@ -49,7 +49,7 @@ class KotlinCoverageProjectViewDecorator(coverageDataManager: CoverageDataManage
             data.locationString = renderCoverageInfo(info)
         }
         else if (element is KtClass) {
-            val qName = LightClassGenerationSupport.getInstance(project).getPsiClass(element)?.qualifiedName
+            val qName = LightClassGenerationSupport.getInstance(project).getLightClass(element)?.qualifiedName
             if (qName != null) {
                 data.locationString = javaCovAnnotator.getClassCoverageInformationString(qName, coverageDataManager)
             }
