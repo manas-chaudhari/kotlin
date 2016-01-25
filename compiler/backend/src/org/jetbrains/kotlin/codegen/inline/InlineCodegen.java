@@ -84,6 +84,7 @@ public class InlineCodegen extends CallGenerator {
 
     private final ReifiedTypeInliner reifiedTypeInliner;
     @Nullable private final TypeParameterMappings typeParameterMappings;
+    private final boolean isDefaultCompilation;
 
     private LambdaInfo activeLambda;
 
@@ -94,8 +95,10 @@ public class InlineCodegen extends CallGenerator {
             @NotNull GenerationState state,
             @NotNull SimpleFunctionDescriptor functionDescriptor,
             @NotNull KtElement callElement,
-            @Nullable TypeParameterMappings typeParameterMappings
+            @Nullable TypeParameterMappings typeParameterMappings,
+            boolean isDefaultCompilation
     ) {
+        this.isDefaultCompilation = isDefaultCompilation;
         assert InlineUtil.isInline(functionDescriptor) : "InlineCodegen could inline only inline function: " + functionDescriptor;
 
         this.state = state;
@@ -267,7 +270,7 @@ public class InlineCodegen extends CallGenerator {
                                                        codegen.getContext(),
                                                        callElement,
                                                        getInlineCallSiteInfo(), reifiedTypeInliner,
-                                                       typeParameterMappings);
+                                                       typeParameterMappings, isDefaultCompilation);
 
         MethodInliner inliner = new MethodInliner(node, parameters, info, new FieldRemapper(null, null, parameters), isSameModule,
                                                   "Method inlining " + callElement.getText(),

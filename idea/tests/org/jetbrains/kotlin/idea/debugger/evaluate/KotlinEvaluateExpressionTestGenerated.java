@@ -265,6 +265,18 @@ public class KotlinEvaluateExpressionTestGenerated extends AbstractKotlinEvaluat
             doSingleBreakpointTest(fileName);
         }
 
+        @TestMetadata("remappedParameterInDefaultInline.kt")
+        public void testRemappedParameterInDefaultInline() throws Exception {
+            String fileName = KotlinTestUtils.navigationMetadata("idea/testData/debugger/tinyApp/src/evaluate/singleBreakpoint/remappedParameterInDefaultInline.kt");
+            doSingleBreakpointTest(fileName);
+        }
+
+        @TestMetadata("remappedParameterInInline.kt")
+        public void testRemappedParameterInInline() throws Exception {
+            String fileName = KotlinTestUtils.navigationMetadata("idea/testData/debugger/tinyApp/src/evaluate/singleBreakpoint/remappedParameterInInline.kt");
+            doSingleBreakpointTest(fileName);
+        }
+
         @TestMetadata("simple.kt")
         public void testSimple() throws Exception {
             String fileName = KotlinTestUtils.navigationMetadata("idea/testData/debugger/tinyApp/src/evaluate/singleBreakpoint/simple.kt");
