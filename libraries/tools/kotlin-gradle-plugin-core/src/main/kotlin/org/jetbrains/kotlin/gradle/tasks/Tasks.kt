@@ -60,7 +60,6 @@ abstract class AbstractKotlinCompile<T : CommonCompilerArguments>() : AbstractCo
     abstract protected fun populateTargetSpecificArgs(args: T)
 
     var kotlinOptions: T = createBlankArgs()
-    var kotlinDestinationDir: File? = destinationDir
 
     private val loggerInstance = Logging.getLogger(this.javaClass)
     override fun getLogger() = loggerInstance
@@ -168,7 +167,7 @@ open class KotlinCompile() : AbstractKotlinCompile<K2JVMCompilerArguments>() {
         }
 
         args.destination = if (StringUtils.isEmpty(kotlinOptions.destination)) {
-            kotlinDestinationDir?.path
+            destinationDir?.path
         } else {
             kotlinOptions.destination
         }
@@ -518,16 +517,6 @@ open class KotlinCompile() : AbstractKotlinCompile<K2JVMCompilerArguments>() {
             .toSet()
 
     private fun File.isJavaFile() = extension.equals(JavaFileType.INSTANCE.defaultExtension, ignoreCase = true)
-
-    override fun afterCompileHook(args: K2JVMCompilerArguments) {
-        logger.debug("Copying resulting files to classes")
-
-        // Copy kotlin classes to all classes directory
-        val outputDirFile = File(args.destination!!)
-        if (outputDirFile.exists()) {
-            FileUtils.copyDirectory(outputDirFile, destinationDir)
-        }
-    }
 
     // override setSource to track source directory sets and files (for generated android folders)
     override fun setSource(source: Any?) {
