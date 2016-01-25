@@ -130,9 +130,7 @@ class Kotlin2JvmSourceSetProcessor(
 
         if (javaTask != null) {
             javaTask.dependsOn(kotlinTaskName)
-            javaTask.doFirst {
-                javaTask.classpath += project.files(kotlinTask.destinationDir)
-            }
+            javaTask.classpath += project.files(kotlinTask.destinationDir)
         }
 
         val kotlinAnnotationProcessingDep = cachedKotlinAnnotationProcessingDep ?: run {
@@ -425,9 +423,7 @@ open class KotlinAndroidPlugin @Inject constructor(val scriptHandler: ScriptHand
                 }
             }
 
-            javaTask.doFirst {
-                javaTask.classpath += project.files(kotlinTask.destinationDir)
-            }
+            javaTask.classpath += project.files(kotlinTask.destinationDir)
         }
     }
 
