@@ -49,7 +49,7 @@ class DestructuringDeclarationResolver(
             val componentName = createComponentName(componentIndex + 1)
 
             val expectedType = getExpectedTypeForComponent(context, entry)
-            val results = fakeCallResolver.resolveFakeCall(context.replaceExpectedType(expectedType), receiver, componentName, entry)
+            val results = fakeCallResolver.resolveFakeCall(context.replaceExpectedType(expectedType), receiver, componentName, entry, FakeCallKind.COMPONENT)
 
             var componentType: KotlinType? = null
             if (results.isSuccess) {
