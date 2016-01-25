@@ -6198,6 +6198,12 @@ public class DiagnosticsTestGenerated extends AbstractDiagnosticsTest {
                 doTest(fileName);
             }
 
+            @TestMetadata("object.kt")
+            public void testObject() throws Exception {
+                String fileName = KotlinTestUtils.navigationMetadata("compiler/testData/diagnostics/tests/exposed/object.kt");
+                doTest(fileName);
+            }
+
             @TestMetadata("packagePrivate.kt")
             public void testPackagePrivate() throws Exception {
                 String fileName = KotlinTestUtils.navigationMetadata("compiler/testData/diagnostics/tests/exposed/packagePrivate.kt");
