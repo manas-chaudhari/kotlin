@@ -41,7 +41,11 @@ open class LookupStorage(private val targetDataDir: File) : BasicMapsOwner() {
     private val idToFile = registerMap(IdToFileMap("id-to-file".storageFile))
     private val fileToId = registerMap(FileToIdMap("file-to-id".storageFile))
     private val lookupMap = registerMap(LookupMap("lookups".storageFile))
+
+    @Volatile
     private var size: Int = 0
+
+    @Volatile
     private var deletedCount: Int = 0
 
     init {
@@ -52,6 +56,7 @@ open class LookupStorage(private val targetDataDir: File) : BasicMapsOwner() {
         }
     }
 
+    @Synchronized
     fun get(lookupSymbol: LookupSymbol): Collection<String> {
         val key = LookupSymbolKey(lookupSymbol.name, lookupSymbol.scope)
         val fileIds = lookupMap[key] ?: return emptySet()
@@ -62,6 +67,7 @@ open class LookupStorage(private val targetDataDir: File) : BasicMapsOwner() {
         }
     }
 
+    @Synchronized
     fun addAll(lookups: Set<Map.Entry<LookupSymbol, Collection<String>>>) {
         val allPaths = lookups.flatMapTo(HashSet<String>()) { it.value }
         val pathToId = allPaths.keysToMap { addFileIfNeeded(File(it)) }
@@ -74,13 +80,17 @@ open class LookupStorage(private val targetDataDir: File) : BasicMapsOwner() {
         }
     }
 
-    fun removeLookupsFrom(file: File) {
-        val id = fileToId[file] ?: return
-        idToFile.remove(id)
-        fileToId.remove(file)
-        deletedCount++
+    @Synchronized
+    fun removeLookupsFrom(files: Sequence<File>) {
+        for (file in files) {
+            val id = fileToId[file] ?: return
+            idToFile.remove(id)
+            fileToId.remove(file)
+            deletedCount++
+        }
     }
 
+    @Synchronized
     override fun clean() {
         if (countersFile.exists()) {
             countersFile.delete()
@@ -92,6 +102,7 @@ open class LookupStorage(private val targetDataDir: File) : BasicMapsOwner() {
         super.clean()
     }
 
+    @Synchronized
     override fun flush(memoryCachesOnly: Boolean) {
         try {
             removeGarbageIfNeeded()
