@@ -100,7 +100,10 @@ class FakeCallResolver(
         if (hasUnreportedError && callElement != null) {
             when (callKind) {
                 FakeCallKind.ITERATOR -> context.trace.report(Errors.ITERATOR_MISSING.on(callElement))
-                FakeCallKind.COMPONENT -> context.trace.report(Errors.SOME_COMPONENT_FUNCTION_MISSING.on(callElement))
+                FakeCallKind.COMPONENT ->
+                    if (receiver != null) {
+                        context.trace.report(Errors.COMPONENT_FUNCTION_MISSING.on(callElement, name, receiver.type))
+                    }
                 FakeCallKind.OTHER -> {}
             }
         }

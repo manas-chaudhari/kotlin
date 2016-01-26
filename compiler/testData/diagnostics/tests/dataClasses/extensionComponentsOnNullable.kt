@@ -7,7 +7,7 @@ operator fun <T> Data<T>.component2() = y
 fun foo(): Int {
     val d: Data<Int>? = null
     // An error must be here
-    val (<!SOME_COMPONENT_FUNCTION_MISSING!>x<!>, <!SOME_COMPONENT_FUNCTION_MISSING!>y<!>) = d
+    val (<!COMPONENT_FUNCTION_MISSING!>x<!>, <!COMPONENT_FUNCTION_MISSING!>y<!>) = d
     return x + y
 }
 
