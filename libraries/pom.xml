@@ -61,8 +61,8 @@
 
     <distributionManagement>
         <repository>
-            <id>sonatype-nexus-snapshots</id>
-            <url>http://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+            <id>bintray</id>
+            <url>https://api.bintray.com/maven/${kotlin.bintray.deploy.path}</url>
         </repository>
         <snapshotRepository>
             <id>sonatype-nexus-staging</id>
